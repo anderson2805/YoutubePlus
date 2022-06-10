@@ -12,4 +12,4 @@ tensorflow==2.8.0
 tensorflow_hub==0.12.0
 youtube_transcript_api==0.4.4
 streamlit-aggrid==0.2.3
-XlsxWriter==3.0.3
+XlsxWriter==3.0.1

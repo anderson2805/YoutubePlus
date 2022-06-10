@@ -2,14 +2,10 @@ import re
 from datetime import datetime
 from typing import List
 
-import numpy as np
 import pandas as pd
-from dateutil import parser, tz
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from src.ingestion import getVideoDetail
-
-to_zone = tz.tzlocal()
 
 from src.semantic_similarity import embed
 
@@ -77,11 +73,7 @@ def processVideoIds(videoIds: List):
             statistics = item.get('statistics')
             topicDetails = item.get('topicDetails')
             recordingDetails = item.get('recordingDetails')
-            if (recordingDetails.get('recordingDate') is not None):
-                recordingDate = parser.parse(recordingDetails.get(
-                    'recordingDate'))
-            else:
-                recordingDate = None
+            recordingDate = recordingDetails.get('recordingDate')
             hashtags = extract_hashtags(snippet.get('description'))
 
             videoDict = {'videoId': item['id'],
