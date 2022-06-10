@@ -44,7 +44,7 @@ def embed(doc):
     with g.as_default():
         input_placeholder = tf.sparse_placeholder(tf.int64, shape=[None, None])
         module = hub.Module(
-            "./models/universal-sentence-encoder-lite_2")
+            "./model/universal-sentence-encoder-lite_2")
             
         encodings = module(
         inputs=dict(
