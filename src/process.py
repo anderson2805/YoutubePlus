@@ -4,6 +4,7 @@ from typing import List
 
 import pandas as pd
 from youtube_transcript_api import YouTubeTranscriptApi
+import streamlit as st
 
 from src.ingestion import getVideoDetail
 
@@ -48,7 +49,7 @@ def extract_hashtags(text):
     hashtag_list = re.findall(regex, text)
     return(hashtag_list)
 
-
+@st.cache(suppress_st_warning=True)
 def process_captions(transcriptdict):
     preprocess_captions = ""
     for line in transcriptdict:
@@ -59,7 +60,7 @@ def process_captions(transcriptdict):
                     removed_descriptive, flags=re.IGNORECASE)
     return output
 
-
+@st.cache(suppress_st_warning=True)
 def processVideoIds(videoIds: List):
     videoList, videoLocList, videoHashtagsList, videoCaptionList = [], [], [], []
     for count, chunk in enumerate(searchChunking(videoIds)):
@@ -130,6 +131,7 @@ def processVideoIds(videoIds: List):
 
     return videoList, videoLocList, videoHashtagsList, videoCaptionList
 
+@st.cache(suppress_st_warning=True)
 def videoDetails_df(videoList, videoLocList, videoHashtagsList, videoCaptionList):
     allDf = {}
     videoDf = pd.DataFrame(videoList)

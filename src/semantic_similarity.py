@@ -1,3 +1,4 @@
+import streamlit as st
 import numpy as np
 import sentencepiece as spm
 import tensorflow.compat.v1 as tf
@@ -22,7 +23,7 @@ print("SentencePiece model loaded at {}.".format(spm_path))
 #     "https://tfhub.dev/google/universal-sentence-encoder-lite/2")
 
 # g.finalize() # not mandatory, but a nice practice, especially in multithreaded environment
-
+@st.cache(suppress_st_warning=True)
 def process_to_IDs_in_sparse_format(sp, sentences):
     # An utility method that processes sentences with the sentence piece processor
     # 'sp' and returns the results in tf.SparseTensor-similar format:
@@ -37,7 +38,7 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 # Compute a representation for each message, showing various lengths supported.
 
-
+@st.cache(suppress_st_warning=True)
 def embed(doc):
     g = tf.Graph()
     with g.as_default():
