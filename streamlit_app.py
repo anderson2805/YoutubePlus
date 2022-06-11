@@ -52,7 +52,7 @@ with st.expander(label='Similar Video', expanded=True):
 
     st.write("""
     Finding semantic similar videos can help determine how original a video is.
-    Enter video link that you like to look for semantically similar videos""")
+    Enter video link that you like to look for semantically similar videos.""")
 
     def api_callback():
         if(len(st.session_state.api_input) < 39):
@@ -69,9 +69,9 @@ with st.expander(label='Similar Video', expanded=True):
     ingestion.service = ingestion.create_yt_service(ingestion.API_KEY)
 
     video_url = st.text_input(
-        'Video URL', placeholder='https://www.youtube.com/watch?v=xxxxxxxxx')
+        'Video URL', placeholder='https://www.youtube.com/watch?v=xxxxxxxxx', help = 'Video must contain English closed captioning')
 
-    if(len(video_url) >= 43):
+    if(len(video_url) >= 28):
         st.video(video_url)
         video_info = YouTube(video_url)
         video_id = video_info.video_id
