@@ -38,7 +38,7 @@ def process_to_IDs_in_sparse_format(sp, sentences):
 
 # Compute a representation for each message, showing various lengths supported.
 
-@st.cache(suppress_st_warning=True)
+@st.cache(suppress_st_warning=False)
 def embed(doc):
     g = tf.Graph()
     with g.as_default():
