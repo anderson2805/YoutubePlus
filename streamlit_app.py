@@ -1,9 +1,11 @@
 from io import BytesIO
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 from pytube import Channel, YouTube
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+from youtube_transcript_api import YouTubeTranscriptApi
 
 import src.feature as feature
 import src.ingestion as ingestion
@@ -75,6 +77,10 @@ with st.expander(label='Similar Video', expanded=True):
         st.video(video_url)
         video_info = YouTube(video_url)
         video_id = video_info.video_id
+        try:
+            YouTubeTranscriptApi.list_transcripts('TLdJMOA8x7Q')
+        except:
+            st.warning('Please choose another video! Fail to load video caption needed for similarity check.')
         video_title = st.text_input(label='Title', value=video_info.title)
 
         col2_1, col2_2 = st.columns([1, 1])
