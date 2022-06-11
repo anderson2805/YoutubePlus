@@ -78,7 +78,7 @@ with st.expander(label='Similar Video', expanded=True):
         video_info = YouTube(video_url)
         video_id = video_info.video_id
         try:
-            YouTubeTranscriptApi.list_transcripts('TLdJMOA8x7Q')
+            YouTubeTranscriptApi.list_transcripts(video_id)
         except:
             st.warning('Please choose another video! Fail to load video caption needed for similarity check.')
         video_title = st.text_input(label='Title', value=video_info.title)
