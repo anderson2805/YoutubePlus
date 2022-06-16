@@ -6,3 +6,4 @@ model/all-mpnet-base-v2/
 data/processed/
 visualisations/
 src/__pycache__/
+src/semantic_similarity.py
