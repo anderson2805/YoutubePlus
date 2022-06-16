@@ -8,7 +8,6 @@ import streamlit as st
 
 from src.ingestion import getVideoDetail
 
-from src.semantic_similarity import embed
 
 
 def searchChunking(ids: List):
