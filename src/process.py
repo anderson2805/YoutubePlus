@@ -10,13 +10,13 @@ from src.ingestion import getVideoDetail
 
 from src.semantic_similarity import embed
 
+
 def searchChunking(ids: List):
     resultsChunks = [ids[i:i + 50]
                      for i in range(0, len(ids), 50)]
     return resultsChunks
 
-
-
+@st.cache(suppress_st_warning=True)
 def process_description(text):
     sentences = re.sub(r'(\W)(?=\1)', '', text).split('\n')
     processed = []
@@ -49,6 +49,7 @@ def extract_hashtags(text):
     hashtag_list = re.findall(regex, text)
     return(hashtag_list)
 
+
 @st.cache(suppress_st_warning=True)
 def process_captions(transcriptdict):
     preprocess_captions = ""
@@ -60,11 +61,12 @@ def process_captions(transcriptdict):
                     removed_descriptive, flags=re.IGNORECASE)
     return output
 
-@st.cache(suppress_st_warning=True)
+
 def processVideoIds(videoIds: List):
-    videoList, videoLocList, videoHashtagsList, videoCaptionList = [], [], [], []
+    videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = [], [], [], [], []
     for count, chunk in enumerate(searchChunking(videoIds)):
-        print("Processing videos %i / %i"%(count + 1, len(searchChunking(videoIds))))
+        print("Processing videos %i / %i" %
+              (count + 1, len(searchChunking(videoIds))))
         videoIds_chunk = ",".join(chunk)
         response = getVideoDetail(videoIds_chunk)
 
@@ -95,6 +97,12 @@ def processVideoIds(videoIds: List):
                          'channelId': snippet['channelId']}
             videoList.append(videoDict)
 
+            if topicDetails:
+                for topic in topicDetails['topicCategories']:
+                    topicDict = {'videoId': item['id'],
+                                 'topics': topic.split('/')[-1]}
+                    videoTopicsList.append(topicDict)
+
             if (recordingDetails.get('locationDescription') is not None):
                 videoLocDict = {'videoId': item['id'],
                                 'locationDescription': recordingDetails.get('locationDescription')}
@@ -107,7 +115,8 @@ def processVideoIds(videoIds: List):
                     videoHashtagsList.append(videoHashtagsDict)
 
             try:
-                transcript_list = YouTubeTranscriptApi.list_transcripts(item['id'])
+                transcript_list = YouTubeTranscriptApi.list_transcripts(
+                    item['id'])
                 # iterate over all available transcripts
                 for index, transcript in enumerate(transcript_list):
                     if(index == 0):
@@ -128,11 +137,10 @@ def processVideoIds(videoIds: List):
             except:
                 next
 
+    return videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList
 
-    return videoList, videoLocList, videoHashtagsList, videoCaptionList
 
-@st.cache(suppress_st_warning=True)
-def videoDetails_df(videoList, videoLocList, videoHashtagsList, videoCaptionList):
+def videoDetails_df(videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList):
     allDf = {}
     videoDf = pd.DataFrame(videoList)
     videoDf = videoDf.set_index("videoId")
@@ -140,19 +148,24 @@ def videoDetails_df(videoList, videoLocList, videoHashtagsList, videoCaptionList
     allDf['videoLocDf'] = pd.DataFrame()
     allDf['videoHashtagsDf'] = pd.DataFrame()
     allDf['videoCaptionDf'] = pd.DataFrame()
-
+    allDf['videoTopicsList'] = pd.DataFrame()
     if len(videoLocList) != 0:
         videoLocDf = pd.DataFrame(videoLocList)
         videoLocDf = videoLocDf.set_index("videoId")
         allDf['videoLocDf'] = videoLocDf
-        
+
     if len(videoHashtagsList) != 0:
         videoHashtagsDf = pd.DataFrame(videoHashtagsList)
         videoHashtagsDf = videoHashtagsDf.set_index("videoId")
         allDf['videoHashtagsDf'] = videoHashtagsDf
-        
+
     if len(videoCaptionList) != 0:
         videoCaptionDf = pd.DataFrame(videoCaptionList)
         videoCaptionDf = videoCaptionDf.set_index("videoId")
         allDf['videoCaptionDf'] = videoCaptionDf
+        
+    if len(videoTopicsList) != 0:
+        videoTopicsDf = pd.DataFrame(videoTopicsList)
+        videoTopicsDf = videoTopicsDf.set_index("videoId")
+        allDf['videoTopicsDf'] = videoTopicsDf
     return allDf

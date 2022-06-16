@@ -7,7 +7,11 @@ from keybert import KeyBERT
 from keyphrase_vectorizers import KeyphraseCountVectorizer
 from sentence_transformers import SentenceTransformer
 
-en_model = SentenceTransformer("all-MiniLM-L12-v2")
+try:
+    en_model = SentenceTransformer("./model/all-mpnet-base-v2")
+except:
+    en_model = SentenceTransformer("./model/all-MiniLM-L6-v2")
+
 
 @st.cache(suppress_st_warning=True)
 def extractKeywords(doc: str) -> list:

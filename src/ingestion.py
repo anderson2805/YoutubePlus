@@ -1,4 +1,5 @@
 from src.service import create_yt_service
+from pytube import Channel
 
 API_KEY = ""
 
@@ -17,6 +18,14 @@ def getVideoDetail(video_ids: list) -> str:
 
 
 def getChannelDetail(channel_ids: list) -> str:
+    """Call YT Channel API
+
+    Args:
+        channel_ids (list): list of channel details
+
+    Returns:
+        str: html return from api, containing channels details, stated in part_string
+    """
     part_string = 'snippet,brandingSettings,statistics,topicDetails'
 
     response = service.channels().list(
@@ -27,6 +36,29 @@ def getChannelDetail(channel_ids: list) -> str:
 
     return response
 
+def getRecentChannelVids(channel_ids: list, recent_x: int) -> list:
+    """Return list of channel vids ids (no API needed)
+
+    Args:
+        channel_ids (list): List of channel ids
+        recent_x (int): x recents videos to ingest
+
+    Returns:
+        list: dictionary of channel id and their list of video url
+        {
+            channelId: 'channelId',
+            videoIds: ['videoUrl1', 'videoUrl2' etc,...]
+        }
+    """
+    result = []
+    for channel_id in channel_ids:
+        url = "https://www.youtube.com/channel/"+ channel_id +'/videos'
+        c = Channel(url)
+        result.append({
+            'channelId' : channel_id,
+            'videoUrls' : [videoUrl[32:] for videoUrl in c.video_urls[:recent_x]]
+        })
+    return result
 
 def getRelatedVideoIds(relatedToVideoId: str) -> list:
     maxResults = 50

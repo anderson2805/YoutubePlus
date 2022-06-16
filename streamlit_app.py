@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,7 +11,13 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import src.feature as feature
 import src.ingestion as ingestion
 import src.process as process
-from src.semantic_similarity import embed
+
+for name in os.listdir('model'):
+    if name == 'universal-sentence-encoder':
+        from src.semantic_similarity import embed
+        break
+    elif name == 'universal-sentence-encoder-lite_2':
+        from src.semantic_similarity_lite import embed
 from src.service import check_api
 
 st.set_page_config(
@@ -40,11 +47,10 @@ def to_excel(dfs: dict, captionDf: pd.DataFrame, processeddf: pd.DataFrame) -> B
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         processeddf.to_excel(writer, sheet_name='similarity')
-        dfs['videoDf']['publishedAt'] = dfs['videoDf']['publishedAt']
-        dfs['videoDf']['recordingDate'] = dfs['videoDf']['recordingDate']
         dfs['videoDf'].to_excel(writer, sheet_name='stats')
         dfs['videoLocDf'].to_excel(writer, sheet_name='loc')
         dfs['videoHashtagsDf'].to_excel(writer, sheet_name='hashtags')
+        dfs['videoTopicsDf'].to_excel(writer, sheet_name='topics')
         captionDf.to_excel(writer, sheet_name='captions')
     processed_data = output.getvalue()
     return processed_data
@@ -71,16 +77,18 @@ with st.expander(label='Similar Video', expanded=True):
     ingestion.service = ingestion.create_yt_service(ingestion.API_KEY)
 
     video_url = st.text_input(
-        'Video URL', placeholder='https://www.youtube.com/watch?v=xxxxxxxxx', help = 'Video must contain English closed captioning')
+        'Video URL', placeholder='https://www.youtube.com/watch?v=xxxxxxxxx', help='Video must contain English closed captioning')
 
     if(len(video_url) >= 28):
         st.video(video_url)
         video_info = YouTube(video_url)
         video_id = video_info.video_id
+        channel_id = video_info.channel_id
         try:
             YouTubeTranscriptApi.list_transcripts(video_id)
         except:
-            st.warning('Please choose another video! Fail to load video caption needed for similarity check.')
+            st.warning(
+                'Please choose another video! Fail to load video caption needed for similarity check.')
         video_title = st.text_input(label='Title', value=video_info.title)
 
         col2_1, col2_2 = st.columns([1, 1])
@@ -99,38 +107,42 @@ with st.expander(label='Similar Video', expanded=True):
             label='Query Keywords', value=keywords_extracted[0], help='Keywords used to query for more videos on Youtube', key='selected_keywords')
 
         query_max = st.slider(
-            label='Number of pages to query (50 videos per page)', min_value=2, max_value=20, value=2)
+            label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2)
 
         related = st.radio(
             "Include related videos",
             ('Yes', 'No'), help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/search/list, it can be related based on music used in inputed video')
 
+        channel = st.radio(
+            "Include channels data",
+            ('Yes', 'No'), index=1, help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/channels/list, include all videos channel information')
+
         download = st.button(label='Call data from YT APIs', disabled=(check_api(
             st.session_state.api_input) != "API access successful"), help=str(check_api(st.session_state.api_input)))
-        st.write('Estimated time to collect: %i minutes'%(query_max*2.5))
+        st.write('Estimated time to collect: %i minutes' % (query_max*2.5))
         if(download):
             with st.spinner(text='Collecting queried video info (title, description, captions, etc.)...'):
                 query_vid_ids = ingestion.queryKeyword(
                     selected_keywords, query_max)
-                videoList, videoLocList, videoHashtagsList, videoCaptionList = process.processVideoIds(
+                videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = process.processVideoIds(
                     query_vid_ids)
-                videoDfs = process.videoDetails_df(
-                    videoList, videoLocList, videoHashtagsList, videoCaptionList)
             if(related == 'Yes'):
                 with st.spinner(text='Collecting related video info (title, description, captions, etc.)...'):
                     related_vid_ids = ingestion.getRelatedVideoIds(video_id)
-                    videoList2, videoLocList2, videoHashtagsList2, videoCaptionList2 = process.processVideoIds(
+                    videoList2, videoLocList2, videoHashtagsList2, videoCaptionList2, videoTopicsList2 = process.processVideoIds(
                         related_vid_ids)
                     videoList.extend(videoList2)
                     videoLocList.extend(videoLocList2)
                     videoHashtagsList.extend(videoHashtagsList2)
                     videoCaptionList.extend(videoCaptionList2)
+                    videoTopicsList.extend(videoTopicsList2)
             with st.spinner(text='Calculating similarity (based on english captions)...'):
                 videoDfs = process.videoDetails_df(
-                    videoList, videoLocList, videoHashtagsList, videoCaptionList)
+                    videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList)
 
                 videoDf = videoDfs['videoDf']
                 videoCaptionDf = videoDfs['videoCaptionDf']
+                
                 videoCaptionDf['embedding'] = embed(
                     videoCaptionDf['embedding'])
 
@@ -148,9 +160,18 @@ with st.expander(label='Similar Video', expanded=True):
                     by=['Similarity'], ascending=False, inplace=True)
                 videoProcessedDf['View Count'] = pd.to_numeric(
                     videoProcessedDf['View Count'], downcast='float', errors='raise').astype('Int64')
+                videoProcessedDf.drop_duplicates(inplace=True)
+                videoDf = videoDf.join(
+                    videoProcessedDf, how='left', on='videoId')
+                videoDf.drop(['Title', 'View Count'], axis=1, inplace = True)
+                videoDf =videoDf[~videoDf.index.duplicated()]
+                videoDf.sort_values(
+                    by=['Similarity'], ascending=False, inplace=True)
+                videoDf['seedvideo'] = videoDf.index == video_id
+                videoDf['seedchannel'] = videoDf.channelId == channel_id
+                videoDfs['videoDf'] = videoDf
                 videoProcessedDf['Similarity'] = videoProcessedDf['Similarity'].map(
                     "{:.1%}".format)
-                videoProcessedDf.drop_duplicates(inplace = True)
             st.success('Done!')
             # videoProcessDf = videoDfs['videoDf'].join(
             #     videoDfs['videoEmbedDf'], how='other')
@@ -175,3 +196,10 @@ with st.expander(label='Similar Video', expanded=True):
                 file_name='YTPlus_SimilarVideos_data.xlsx',
                 help='Include full data of video stats, locations, hashtags, captions and embeddings.'
             )
+
+
+# with st.expander(label='Channel Suggestion', expanded=False):
+#     st.write("""
+#     Suggest channels that produce similar type of contents.""")
+
+#     channelUrl = st.text_input(label='Channel URL', key='channelUrl')

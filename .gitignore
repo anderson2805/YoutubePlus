@@ -1,4 +1,8 @@
 /.vscode
 /testbench
-src/__pycache__
 __pycache__/
+model/universal-sentence-encoder/
+model/all-mpnet-base-v2/
+data/processed/
+visualisations/
+src/__pycache__/
