@@ -1,5 +1,4 @@
 from io import BytesIO
-import os
 
 import numpy as np
 import pandas as pd
@@ -12,12 +11,10 @@ import src.feature as feature
 import src.ingestion as ingestion
 import src.process as process
 
-for name in os.listdir('model'):
-    if name == 'universal-sentence-encoder':
-        from src.semantic_similarity import embed
-        break
-    elif name == 'universal-sentence-encoder-lite_2':
-        from src.semantic_similarity_lite import embed
+try:
+    from src.semantic_similarity import embed
+except:
+    from src.semantic_similarity_lite import embed
 from src.service import check_api
 
 st.set_page_config(
