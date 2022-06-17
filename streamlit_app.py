@@ -15,6 +15,7 @@ try:
     from src.semantic_similarity import embed
 except:
     from src.semantic_similarity_lite import embed
+
 from src.service import check_api
 
 st.set_page_config(
