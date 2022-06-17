@@ -1,5 +1,7 @@
 from googleapiclient.discovery import build
+import logging
 
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
 SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 

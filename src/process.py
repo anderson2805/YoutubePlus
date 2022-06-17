@@ -9,13 +9,12 @@ import streamlit as st
 from src.ingestion import getVideoDetail
 
 
-
 def searchChunking(ids: List):
     resultsChunks = [ids[i:i + 50]
                      for i in range(0, len(ids), 50)]
     return resultsChunks
 
-@st.cache(suppress_st_warning=True)
+@st.experimental_memo
 def process_description(text):
     sentences = re.sub(r'(\W)(?=\1)', '', text).split('\n')
     processed = []
@@ -40,7 +39,7 @@ def durationSec(durationLs):
     else:
         return durationLs[0]
 
-
+@st.experimental_memo
 def extract_hashtags(text):
     # the regular expression
     regex = "#(\w+)"
@@ -48,8 +47,7 @@ def extract_hashtags(text):
     hashtag_list = re.findall(regex, text)
     return(hashtag_list)
 
-
-@st.cache(suppress_st_warning=True)
+@st.experimental_memo
 def process_captions(transcriptdict):
     preprocess_captions = ""
     for line in transcriptdict:
@@ -60,7 +58,7 @@ def process_captions(transcriptdict):
                     removed_descriptive, flags=re.IGNORECASE)
     return output
 
-
+@st.experimental_singleton
 def processVideoIds(videoIds: List):
     videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = [], [], [], [], []
     for count, chunk in enumerate(searchChunking(videoIds)):
@@ -88,7 +86,6 @@ def processVideoIds(videoIds: List):
                          'duration': durationSec(re.findall(r'\d+', contentDetails['duration'])),
                          'defaultAudioLanguage': snippet.get('defaultAudioLanguage'),
                          'tags': str(snippet.get('tags')),
-                         'topicCategories': str([(topic.split('/')[-1]) for topic in topicDetails['topicCategories']]) if topicDetails else None,
                          'commentCount': statistics.get('commentCount'),
                          'favoriteCount': statistics['favoriteCount'],
                          'likeCount': statistics.get('likeCount'),
@@ -162,7 +159,7 @@ def videoDetails_df(videoList, videoLocList, videoHashtagsList, videoCaptionList
         videoCaptionDf = pd.DataFrame(videoCaptionList)
         videoCaptionDf = videoCaptionDf.set_index("videoId")
         allDf['videoCaptionDf'] = videoCaptionDf
-        
+
     if len(videoTopicsList) != 0:
         videoTopicsDf = pd.DataFrame(videoTopicsList)
         videoTopicsDf = videoTopicsDf.set_index("videoId")
