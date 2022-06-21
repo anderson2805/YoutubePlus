@@ -7,3 +7,4 @@ data/processed/
 visualisations/
 src/__pycache__/
 src/semantic_similarity.py
+data/aws_youtube_plus_dev.pem
