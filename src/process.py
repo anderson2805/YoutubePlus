@@ -14,7 +14,7 @@ def searchChunking(ids: List):
                      for i in range(0, len(ids), 50)]
     return resultsChunks
 
-@st.experimental_memo
+#@st.experimental_memo
 def process_description(text):
     sentences = re.sub(r'(\W)(?=\1)', '', text).split('\n')
     processed = []
@@ -39,15 +39,16 @@ def durationSec(durationLs):
     else:
         return durationLs[0]
 
-@st.experimental_memo
+#@st.experimental_memo
 def extract_hashtags(text):
     # the regular expression
     regex = "#(\w+)"
     # extracting the hashtags
     hashtag_list = re.findall(regex, text)
+    hashtag_list = [hashtag.title() for hashtag in hashtag_list]
     return(hashtag_list)
 
-@st.experimental_memo
+#@st.experimental_memo
 def process_captions(transcriptdict):
     preprocess_captions = ""
     for line in transcriptdict:
@@ -58,7 +59,7 @@ def process_captions(transcriptdict):
                     removed_descriptive, flags=re.IGNORECASE)
     return output
 
-@st.experimental_singleton
+#@st.experimental_singleton
 def processVideoIds(videoIds: List):
     videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = [], [], [], [], []
     for count, chunk in enumerate(searchChunking(videoIds)):

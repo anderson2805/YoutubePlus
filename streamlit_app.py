@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from pytube import Channel, YouTube
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from youtube_transcript_api import YouTubeTranscriptApi
 
 import src.feature as feature
@@ -140,53 +140,53 @@ with st.expander(label='Similar Video', expanded=True):
 
                 videoDf = videoDfs['videoDf']
                 videoCaptionDf = videoDfs['videoCaptionDf']
-                
+
                 videoCaptionDf['embedding'] = embed(
                     videoCaptionDf['embedding'])
 
-                videoCaptionDf['Similarity'] = np.inner(videoCaptionDf[videoCaptionDf.index == video_id].embedding.values[0],
-                                                        videoCaptionDf['embedding'].to_list())
+                videoCaptionDf['Similarity %'] = np.inner(videoCaptionDf[videoCaptionDf.index == video_id].embedding.values[0],
+                                                          videoCaptionDf['embedding'].to_list())
 
                 videoProcessedDf = videoDf.join(videoCaptionDf, how='outer')
                 videoProcessedDf['Video URL'] = "https://www.youtube.com/watch?v=" + \
                     videoProcessedDf.index
                 videoProcessedDf = videoProcessedDf[[
-                    'Similarity', 'title', 'viewCount', 'Video URL']]
+                    'Similarity %', 'title', 'viewCount', 'likeCount', 'commentCount', 'Video URL']]
                 videoProcessedDf.rename(
-                    columns={"title": "Title", "viewCount": "View Count"}, inplace=True)
+                    columns={"title": "Title", "viewCount": "Views Count", "likeCount": "Likes Count", "commentCount" : "Comments Count"}, inplace=True)
                 videoProcessedDf.sort_values(
-                    by=['Similarity'], ascending=False, inplace=True)
-                videoProcessedDf['View Count'] = pd.to_numeric(
-                    videoProcessedDf['View Count'], downcast='float', errors='raise').astype('Int64')
+                    by=['Similarity %'], ascending=False, inplace=True)
+                videoProcessedDf['Views Count'] = pd.to_numeric(
+                    videoProcessedDf['Views Count'], downcast='float', errors='raise').astype('Int64')
                 videoProcessedDf.drop_duplicates(inplace=True)
                 videoDf = videoDf.join(
                     videoProcessedDf, how='left', on='videoId')
-                videoDf.drop(['Title', 'View Count'], axis=1, inplace = True)
-                videoDf =videoDf[~videoDf.index.duplicated()]
+                videoDf.drop(['Title', 'Views Count', 'Likes Count', 'Comments Count'], axis=1, inplace=True)
+                videoDf = videoDf[~videoDf.index.duplicated()]
                 videoDf.sort_values(
-                    by=['Similarity'], ascending=False, inplace=True)
+                    by=['Similarity %'], ascending=False, inplace=True)
                 videoDf['seedvideo'] = videoDf.index == video_id
                 videoDf['seedchannel'] = videoDf.channelId == channel_id
                 videoDfs['videoDf'] = videoDf
-                videoProcessedDf['Similarity'] = videoProcessedDf['Similarity'].map(
-                    "{:.1%}".format)
+                videoProcessedDf['Similarity %'] = (
+                    videoProcessedDf['Similarity %']*100).round(1)
             st.success('Done!')
             # videoProcessDf = videoDfs['videoDf'].join(
             #     videoDfs['videoEmbedDf'], how='other')
             gb = GridOptionsBuilder.from_dataframe(videoProcessedDf)
-
+            cell_renderer = JsCode("""
+            function(params) {return `<a href=${params.value} target="_blank">${params.value}</a>`}
+            """)
             gb.configure_side_bar()
             gb.configure_pagination(paginationAutoPageSize=True)
             gb.configure_grid_options(domLayout='normal')
-            #gb.configure_selection('single', use_checkbox=False)
+            gb.configure_column("Video URL", cellRenderer=cell_renderer)
             gb.configure_default_column(
                 groupable=True, value=True, enableRowGroup=True, aggFunc="sum", editable=False)
             # gb.configure_column("Description", editable = True)
             gridOptions = gb.build()
-
             grid_response = AgGrid(
-                videoProcessedDf, gridOptions, update_mode=GridUpdateMode.SELECTION_CHANGED, enable_enterprise_modules=True)
-
+                videoProcessedDf, gridOptions, update_mode=GridUpdateMode.SELECTION_CHANGED, enable_enterprise_modules=True, allow_unsafe_jscode = True)
             st.warning('Result will be cleared when data downloaded.')
             st.download_button(
                 label="📥Download Data",
