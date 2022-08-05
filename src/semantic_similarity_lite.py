@@ -4,7 +4,6 @@ import sentencepiece as spm
 import os
 import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
-from pytube import Channel
 tf.disable_eager_execution()
 print('Lite Universal sentences encoder(v2) loaded...')
 sp = spm.SentencePieceProcessor()
@@ -19,6 +18,8 @@ print("SentencePiece model loaded at {}.".format(spm_path))
 #     "https://tfhub.dev/google/universal-sentence-encoder-lite/2")
 
 # g.finalize() # not mandatory, but a nice practice, especially in multithreaded environment
+
+
 @st.cache(suppress_st_warning=True)
 def process_to_IDs_in_sparse_format(sp, sentences):
     # An utility method that processes sentences with the sentence piece processor
@@ -29,10 +30,11 @@ def process_to_IDs_in_sparse_format(sp, sentences):
     dense_shape = (len(ids), max_len)
     values = [item for sublist in ids for item in sublist]
     indices = [[row, col]
-                for row in range(len(ids)) for col in range(len(ids[row]))]
+               for row in range(len(ids)) for col in range(len(ids[row]))]
     return (values, indices, dense_shape)
 
 # Compute a representation for each message, showing various lengths supported.
+
 
 @st.cache(suppress_st_warning=True)
 def embed(doc):
@@ -57,8 +59,8 @@ def embed(doc):
             message_embeddings = session.run(
                 encodings,
                 feed_dict={input_placeholder.values: values,
-                            input_placeholder.indices: indices,
-                            input_placeholder.dense_shape: dense_shape})
+                           input_placeholder.indices: indices,
+                           input_placeholder.dense_shape: dense_shape})
 
     g.finalize()  # not mandatory, but a nice practice, especially in multithreaded environment
 
