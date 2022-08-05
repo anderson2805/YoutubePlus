@@ -4,6 +4,7 @@ import sentencepiece as spm
 import os
 import tensorflow.compat.v1 as tf
 import tensorflow_hub as hub
+from pytube import Channel
 tf.disable_eager_execution()
 print('Lite Universal sentences encoder(v2) loaded...')
 sp = spm.SentencePieceProcessor()
