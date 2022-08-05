@@ -62,7 +62,8 @@ def process_captions(transcriptdict):
         " [\(\[].*?[\)\]]", "", preprocess_captions)
     output = re.sub(r'\b(\w+) \1\b', r'\1',
                     removed_descriptive, flags=re.IGNORECASE)
-    return output
+    output = output.replace("\n", " ")
+    return output[1:]
 
 #@st.experimental_singleton
 def processVideoIds(videoIds: List):
