@@ -16,6 +16,8 @@ def searchChunking(ids: List):
 
 #@st.experimental_memo
 def process_description(text):
+    if (text == ""):
+        return ""
     sentences = re.sub(r'(\W)(?=\1)', '', text).split('\n')
     processed = []
     for index, sentence in enumerate(sentences):
@@ -26,7 +28,10 @@ def process_description(text):
         elif (url_search is None and at_search is None):
             processed.append(sentence)
         elif(len(processed) > 1 and (url_search is not None and (url_search.span()[1] - url_search.span()[0]) == len(sentence)) or sentences[index - 1][-1] in [':', '-']):
-            processed.pop()
+            try:
+                processed.pop()
+            except:
+                print(processed)
     return " ".join(processed)
 
 
@@ -83,7 +88,7 @@ def processVideoIds(videoIds: List):
                          'collectDateTime': datetime.now(),
                          'title': snippet['title'],
                          'description': snippet.get('description'),
-                         'processedDescription': process_description(snippet.get('description')),
+                         'processedDescription': process_description(snippet.get('description',"")),
                          'duration': durationSec(re.findall(r'\d+', contentDetails['duration'])),
                          'defaultAudioLanguage': snippet.get('defaultAudioLanguage'),
                          'tags': str(snippet.get('tags')),
