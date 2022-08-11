@@ -29,7 +29,7 @@ def process_description(text):
             break
         elif (url_search is None and at_search is None):
             processed.append(sentence)
-        elif(len(processed) > 1 and (url_search is not None and len(url_search) > 1 and (url_search.span()[1] - url_search.span()[0]) == len(sentence)) or sentences[index - 1][-1] in [':', '-']):
+        elif(len(processed) > 1 and (url_search is not None and len(url_search.span()) > 1 and (url_search.span()[1] - url_search.span()[0]) == len(sentence)) or sentences[index - 1][-1] in [':', '-']):
             try:
                 processed.pop()
             except:
