@@ -25,7 +25,7 @@ def process_description(text):
     for index, sentence in enumerate(sentences):
         url_search = re.search(r'http\S+', sentence)
         at_search = re.search(r'@', sentence)
-        if(re.subn(r'\W', '', sentence)[1] == len(sentence) or not sentence[0].isalpha()):
+        if(re.subn(r'\W', '', sentence)[1] == len(sentence) or not sentence[0].isalpha() or len(sentences[index-1]) == 0):
             break
         elif (url_search is None and at_search is None):
             processed.append(sentence)
