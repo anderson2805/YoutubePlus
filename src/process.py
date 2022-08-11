@@ -14,7 +14,9 @@ def searchChunking(ids: List):
                      for i in range(0, len(ids), 50)]
     return resultsChunks
 
-#@st.experimental_memo
+# @st.experimental_memo
+
+
 def process_description(text):
     if (text == ""):
         return ""
@@ -27,7 +29,7 @@ def process_description(text):
             break
         elif (url_search is None and at_search is None):
             processed.append(sentence)
-        elif(len(processed) > 1 and (url_search is not None and (url_search.span()[1] - url_search.span()[0]) == len(sentence)) or sentences[index - 1][-1] in [':', '-']):
+        elif(len(processed) > 1 and (url_search is not None and len(url_search) > 1 and (url_search.span()[1] - url_search.span()[0]) == len(sentence)) or sentences[index - 1][-1] in [':', '-']):
             try:
                 processed.pop()
             except:
@@ -44,7 +46,9 @@ def durationSec(durationLs):
     else:
         return durationLs[0]
 
-#@st.experimental_memo
+# @st.experimental_memo
+
+
 def extract_hashtags(text):
     # the regular expression
     regex = "#(\w+)"
@@ -53,7 +57,9 @@ def extract_hashtags(text):
     hashtag_list = [hashtag.title() for hashtag in hashtag_list]
     return(hashtag_list)
 
-#@st.experimental_memo
+# @st.experimental_memo
+
+
 def process_captions(transcriptdict):
     preprocess_captions = ""
     for line in transcriptdict:
@@ -63,10 +69,12 @@ def process_captions(transcriptdict):
     output = re.sub(r'\b(\w+) \1\b', r'\1',
                     removed_descriptive, flags=re.IGNORECASE)
     output = output.replace("\n", " ").replace(u'\xa0', u' ')
-    output = re.sub(' +',' ', output)
+    output = re.sub(' +', ' ', output)
     return output[1:]
 
-#@st.experimental_singleton
+# @st.experimental_singleton
+
+
 def processVideoIds(videoIds: List):
     videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = [], [], [], [], []
     processBar = st.progress(0)
@@ -94,7 +102,7 @@ def processVideoIds(videoIds: List):
                          'collectDateTime': datetime.now(),
                          'title': snippet['title'],
                          'description': snippet.get('description'),
-                         'processedDescription': process_description(snippet.get('description',"")),
+                         'processedDescription': process_description(snippet.get('description', "")),
                          'duration': durationSec(re.findall(r'\d+', contentDetails['duration'])),
                          'defaultAudioLanguage': snippet.get('defaultAudioLanguage'),
                          'tags': str(snippet.get('tags')),
