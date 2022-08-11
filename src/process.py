@@ -69,9 +69,13 @@ def process_captions(transcriptdict):
 #@st.experimental_singleton
 def processVideoIds(videoIds: List):
     videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = [], [], [], [], []
-    for count, chunk in enumerate(searchChunking(videoIds)):
+    processBar = st.progress(0)
+    chunkList = searchChunking(videoIds)
+    chunkLength = len(chunkList)
+    for count, chunk in enumerate(chunkList):
         print("Processing videos %i / %i" %
-              (count + 1, len(searchChunking(videoIds))))
+              (count + 1, chunkLength))
+        processBar.progress((count+1)/chunkLength)
         videoIds_chunk = ",".join(chunk)
         response = getVideoDetail(videoIds_chunk)
 
@@ -140,7 +144,7 @@ def processVideoIds(videoIds: List):
                 videoCaptionList.append(videoCaptionDict)
             except:
                 next
-
+    processBar.empty()
     return videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList
 
 

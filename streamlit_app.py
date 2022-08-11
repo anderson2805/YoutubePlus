@@ -103,18 +103,28 @@ with st.expander(label='Similar Video', expanded=True):
 
         selected_keywords = st.text_input(
             label='Query Keywords', value=keywords_extracted[0], help='Keywords used to query for more videos on Youtube', key='selected_keywords')
-        
-        
+
+
+
         query_max = st_custom_slider(
-            label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2, )
+            label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2, key="slider1")
+        
+        col1, col2, col3, col4 = st.columns(4)
 
-        related = st.radio(
-            "Include related videos",
-            ('Yes', 'No'), help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/search/list, it can be related based on music used in inputed video')
-
-        channel = st.radio(
-            "Include channels data",
-            ('Yes', 'No'), index=1, help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/channels/list, include all videos channel information')
+        with col1:
+            queryOrder = st.selectbox(
+                'API Search Ordering', index=0, options=('Relevance', 'Date', 'Rating', 'Title', 'Video Count', 'View Count'), help="https://developers.google.com/youtube/v3/docs/search/list#order")
+        with col2:
+            caption = st.radio("Non-caption videos", ('Include', 'Exclude'), index=1,
+                               help='Not including non-caption video will speed up processing time and reduce API costing')
+        with col3:
+            related = st.radio(
+                "Related videos",
+                ('Include', 'Exclude'), help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/search/list, it can be related based on music used in inputed video')
+        with col4:
+            channel = st.radio(
+                "Channels data",
+                ('Include', 'Exclude'), index=1, help='Utalising Youtube Related API: https://developers.google.com/youtube/v3/docs/channels/list, include all videos channel information')
 
         download = st.button(label='Call data from YT APIs', disabled=(check_api(
             st.session_state.api_input) != "API access successful"), help=str(check_api(st.session_state.api_input)))
@@ -122,7 +132,7 @@ with st.expander(label='Similar Video', expanded=True):
         if(download):
             with st.spinner(text='Collecting queried video info (title, description, captions, etc.)...'):
                 query_vid_ids = ingestion.queryKeyword(
-                    selected_keywords, query_max)
+                    selected_keywords, video_id, queryOrder.lower(), caption, query_max)
                 videoList, videoLocList, videoHashtagsList, videoCaptionList, videoTopicsList = process.processVideoIds(
                     query_vid_ids)
             if(related == 'Yes'):
@@ -144,7 +154,7 @@ with st.expander(label='Similar Video', expanded=True):
 
                 videoCaptionDf['embedding'] = embed(
                     videoCaptionDf['embedding'])
-
+                    
                 videoCaptionDf['Similarity %'] = np.inner(videoCaptionDf[videoCaptionDf.index == video_id].embedding.values[0],
                                                           videoCaptionDf['embedding'].to_list())
 
@@ -154,7 +164,7 @@ with st.expander(label='Similar Video', expanded=True):
                 videoProcessedDf = videoProcessedDf[[
                     'Similarity %', 'title', 'viewCount', 'likeCount', 'commentCount', 'Video URL']]
                 videoProcessedDf.rename(
-                    columns={"title": "Title", "viewCount": "Views Count", "likeCount": "Likes Count", "commentCount" : "Comments Count"}, inplace=True)
+                    columns={"title": "Title", "viewCount": "Views Count", "likeCount": "Likes Count", "commentCount": "Comments Count"}, inplace=True)
                 videoProcessedDf.sort_values(
                     by=['Similarity %'], ascending=False, inplace=True)
                 videoProcessedDf['Views Count'] = pd.to_numeric(
@@ -162,7 +172,8 @@ with st.expander(label='Similar Video', expanded=True):
                 videoProcessedDf.drop_duplicates(inplace=True)
                 videoDf = videoDf.join(
                     videoProcessedDf, how='left', on='videoId')
-                videoDf.drop(['Title', 'Views Count', 'Likes Count', 'Comments Count'], axis=1, inplace=True)
+                videoDf.drop(['Title', 'Views Count', 'Likes Count',
+                             'Comments Count'], axis=1, inplace=True)
                 videoDf = videoDf[~videoDf.index.duplicated()]
                 videoDf.sort_values(
                     by=['Similarity %'], ascending=False, inplace=True)
@@ -187,7 +198,7 @@ with st.expander(label='Similar Video', expanded=True):
             # gb.configure_column("Description", editable = True)
             gridOptions = gb.build()
             grid_response = AgGrid(
-                videoProcessedDf, gridOptions, update_mode=GridUpdateMode.SELECTION_CHANGED, enable_enterprise_modules=True, allow_unsafe_jscode = True)
+                videoProcessedDf, gridOptions, update_mode=GridUpdateMode.SELECTION_CHANGED, enable_enterprise_modules=True, allow_unsafe_jscode=True)
             st.warning('Result will be cleared when data downloaded.')
             st.download_button(
                 label="📥Download Data",
