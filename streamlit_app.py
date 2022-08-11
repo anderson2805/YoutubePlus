@@ -6,7 +6,7 @@ import streamlit as st
 from pytube import Channel, YouTube
 from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode, JsCode
 from youtube_transcript_api import YouTubeTranscriptApi
-
+from streamlit_custom_slider import st_custom_slider
 import src.feature as feature
 import src.ingestion as ingestion
 import src.process as process
@@ -103,9 +103,10 @@ with st.expander(label='Similar Video', expanded=True):
 
         selected_keywords = st.text_input(
             label='Query Keywords', value=keywords_extracted[0], help='Keywords used to query for more videos on Youtube', key='selected_keywords')
-
-        query_max = st.slider(
-            label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2)
+        
+        
+        query_max = st_custom_slider(
+            label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2, )
 
         related = st.radio(
             "Include related videos",
