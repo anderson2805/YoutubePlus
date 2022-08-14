@@ -57,8 +57,11 @@ def to_excel(dfs: dict, captionDf: pd.DataFrame, processeddf: pd.DataFrame) -> B
 with st.expander(label='Similar Video', expanded=True):
 
     st.write("""
-    Finding semantic similar videos can help determine how original a video is.
-    Enter video link that you like to look for semantically similar videos.""")
+    As a way of determining the originality of a video, it can be helpful to look for semantically similar videos.
+    Start by entering the video link you wish to search for semantically similar videos and your Google API key for Streamlit.
+    
+    Detailed instructions on obtaining the API key and analysing the data can be found in the [documentation](https://anderson2805.github.io/yt_support/)
+    """)
 
     def api_callback():
         if(len(st.session_state.api_input) < 39):
@@ -108,7 +111,7 @@ with st.expander(label='Similar Video', expanded=True):
 
         query_max = st_custom_slider(
             label='Number of pages to query (50 videos per page)', min_value=2, max_value=10, value=2, key="slider1")
-        
+
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
@@ -206,6 +209,7 @@ with st.expander(label='Similar Video', expanded=True):
                 file_name='YTPlus_SimilarVideos_data.xlsx',
                 help='Include full data of video stats, locations, hashtags, captions and embeddings.'
             )
+    st.write("Credit to [KeyBERT](https://maartengr.github.io/KeyBERT/index.html) for keywords extraction and [Google's Universal Sentence Encoder](https://www.tensorflow.org/hub/tutorials/semantic_similarity_with_tf_hub_universal_encoder) for caption embedding")
 
 
 # with st.expander(label='Channel Suggestion', expanded=False):
