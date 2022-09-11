@@ -36,6 +36,31 @@ def getChannelDetail(channel_ids: list) -> str:
 
     return response
 
+def getCommentDetail(videoId: str) -> str:
+    """Call YT Channel API
+
+    Args:
+        video_ids (list): a videoId that comments will be extracted from.
+
+    Returns:
+        str: html return from api, containing comments details, stated in part_string
+    """
+    responses = []
+    part_string = 'id, snippet'
+    nextPageToken = ''
+    pageNumber = 0
+    while (nextPageToken!= 'end' or pageNumber == 0):
+        pageNumber += 1
+        response = service.commentThreads().list(
+            part=part_string,
+            videoId=videoId,
+            maxResults=100,
+            pageToken=nextPageToken,
+        ).execute()
+        nextPageToken = response.get('nextPageToken','end')
+        # Store the current page of results
+        responses = responses + response['items']
+    return responses
 
 def getRecentChannelVids(channel_ids: list, recent_x: int) -> list:
     """Return list of channel vids ids (no API needed)
